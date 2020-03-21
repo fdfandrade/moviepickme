@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: "AWS::Serverless-2016-10-31"
+
+Resources:
+  # Lambdas Role
+  LambdasRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+
+  IMDBDatasetsHandlerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../imdb-datasets-handler/lambda
+      MemorySize: 128
+      Handler: imdb_datasets.lambda_handler
+      Role: !GetAtt LambdasRole.Arn
+      Timeout: 300
+      Layers:
+        - !Ref IMDBDatasetsHandlerLayer
+      Runtime: python3.7
+      FunctionName: imdb-datasets-handler
+
+  IMDBDatasetsHandlerLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - python3.7
+      ContentUri: ../../imdb-datasets-handler/layer
+      Description: "IMDB Datasets layer"
+      LayerName: imdb-datasets-handler-layer
+
+  AssumeRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: imdb-datasets-handler-policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          # Log-related access
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogStream'
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${IMDBDatasetsHandlerLambda}:*"
+          # Lambdas-related access
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+              - 'lambda:ListFunctions'
+              - 'lambda:AddPermission'
+            Resource: "*"
+          # SSM
+          - Effect: Allow
+            Action:
+              - 'ssm:GetParameter'
+            Resource: "*"
+          # DynamoDB
+          - Effect: Allow
+            Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:GetItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:DescribeTable
+            Resource:
+              - !ImportValue MonSysZendeskPolicyTableArn
+      Roles:
+        - !Ref LambdasRole
+
+Outputs:
+  IMDBDatasetsHandlerLambdaName:
+    Description: Watcher Event Evaluate Policies Lambda Name
+    Value: !GetAtt IMDBDatasetsHandlerLambda.Arn
+    Export:
+      Name: IMDBDatasetsHandlerLambdaName
