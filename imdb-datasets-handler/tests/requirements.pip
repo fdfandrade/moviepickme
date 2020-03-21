@@ -1,0 +1,7 @@
+git+https://github.com/OutSystems/private-aws-py-log-lib.git@v0.5#egg=pensieve
+git+https://github.com/OutSystems/private-cloudpy-libs.git@v1.1.2#egg=cloudpy-libs
+pytest==4.5.0
+moto==1.3.14
+faker==4.0.2
+pytest-mock==2.0.0
+pynamodb==4.2.0
