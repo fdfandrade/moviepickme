@@ -12,6 +12,8 @@ phases:
       - git config --global credential.*.username $TOKEN
       - git config --global core.askPass "/bin/true"
       - pip install -r imdb-datasets-handler/layer/requirements.pip -t imdb-datasets-handler/layer/python
+      - echo $ArtifactBucket
+      - echo KMSKey
       - aws cloudformation package --template-file cloud-formation/imdb-datasets-handler/template.yaml --s3-bucket $ArtifactBucket --kms-key-id $KMSKey --output-template-file imdb-datasets-handler.yaml-processed
   post_build:
     commands:
