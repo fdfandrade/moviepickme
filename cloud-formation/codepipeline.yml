@@ -5,11 +5,11 @@ Parameters:
   GitHubOwner:
     Description: GitHub Repository Owner
     Type: String
-    Default: OutSystems
+    Default: fdfandrade
   GitHubRepository:
     Description: GitHub Repository Name
     Type: String
-    Default: private-monsys-alerting
+    Default: moviepickme
   GitHubBranch:
     Description: GitHub Repository Branch
     Type: String
@@ -20,6 +20,99 @@ Parameters:
     Default: GitHubToken
 
 Resources:
+  # CFRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     RoleName: codepipeline-moviepickme-role
+  #     AssumeRolePolicyDocument:
+  #       Version: 2012-10-17
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             AWS:
+  #               - !Sub ${AWS::AccountId}
+  #           Action:
+  #             - sts:AssumeRole
+  #     Path: /
+  
+  # CFPolicy:
+  #   Type: AWS::IAM::Policy
+  #   Properties:
+  #     PolicyName: pipeline-policy
+  #     PolicyDocument:
+  #       Version: 2012-10-17
+  #       Statement:
+  #         - Effect: Allow
+  #           Action:
+  #             - cloudformation:*
+  #             - s3:*
+  #             - iam:PassRole
+  #           Resource: "*"
+  #         - Effect: Allow
+  #           Action:
+  #             - kms:*
+  #           Resource: !GetAtt KMSKey.Arn
+  #     Roles:
+  #       - !Ref CFRole
+  
+  # CFDeployerRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     RoleName: moviepickme-deployer-role
+  #     AssumeRolePolicyDocument:
+  #       Version: 2012-10-17
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - cloudformation.amazonaws.com
+  #           Action:
+  #             - sts:AssumeRole
+  #     Path: /
+
+  # CFDeployerPolicy:
+  #   Type: AWS::IAM::Policy
+  #   Properties:
+  #     PolicyName: moviepickme-deployer-policy
+  #     PolicyDocument:
+  #       Version: 2012-10-17
+  #       Statement:
+  #         - Effect: Allow
+  #           Action:
+  #             - iam:*
+  #             - lambda:*
+  #             - apigateway:*
+  #             - events:*
+  #             - states:*
+  #             - logs:*
+  #             - cloudformation:*
+  #             - s3:*
+  #             - sqs:*
+  #             - sns:*
+  #             - dynamodb:*
+  #             - ec2:*
+  #             - ssm:*
+  #             - cloudwatch:DeleteAlarms
+  #             - cloudwatch:DescribeAlarms
+  #             - cloudwatch:PutMetricData
+  #             - cloudwatch:PutMetricAlarm
+  #           Resource: "*"
+  #         - Effect: Allow
+  #           Action:
+  #             - kms:*
+  #           Resource:
+  #            - !GetAtt KMSKey.Arn
+  #         - Effect: Allow
+  #           Action:
+  #             - s3:PutObject
+  #             - s3:GetBucketPolicy
+  #             - s3:GetObject
+  #             - s3:ListBucket
+  #           Resource:
+  #            - !Join ['',['arn:aws:s3:::',!Ref ArtifactBucket, '/*']]
+  #            - !Join ['',['arn:aws:s3:::',!Ref ArtifactBucket]]
+  #     Roles:
+  #       - !Ref CFDeployerRole
 
   ###########
   # KMS KEY #
@@ -68,15 +161,10 @@ Resources:
               - kms:GenerateDataKey*
               - kms:DescribeKey
             Resource: "*"
-  KMSAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: alias/codepipeline-moviepickme
-      TargetKeyId: !Ref KMSKey
 
-  ###################################
-  # ARTIFACT BUCKET
-  ###################################
+  # ###################################
+  # # ARTIFACT BUCKET
+  # ###################################
 
   ArtifactBucket:
     Type: AWS::S3::Bucket
@@ -98,19 +186,10 @@ Resources:
               AWS:
                 - !GetAtt BuildProjectRole.Arn
                 - !GetAtt PipeLineRole.Arn
-          - Effect: Allow
-            Action:
-              - s3:PutObject
-              - s3:GetBucketPolicy
-              - s3:GetObject
-              - s3:ListBucket
-            Resource:
-              - !Join ['',['arn:aws:s3:::',!Ref ArtifactBucket, '/*']]
-              - !Join ['',['arn:aws:s3:::',!Ref ArtifactBucket]]
 
-  #################
-  # PIPELINE ROLE #
-  #################
+  # #################
+  # # PIPELINE ROLE #
+  # #################
 
   PipeLineRole:
     Type: AWS::IAM::Role
@@ -180,15 +259,17 @@ Resources:
             Resource:
             - !Join ['',['arn:aws:s3:::',!Ref ArtifactBucket, '/*']]
             - !Join ['',['arn:aws:s3:::',!Ref ArtifactBucket]]
-          - Effect: Allow
-            Action:
-              - sts:AssumeRole
+          # - Effect: Allow
+          #   Action:
+          #     - sts:AssumeRole
+          #   Resource:
+          #     - !Sub arn:aws:iam::${AWS::AccountId}:role/codepipeline-moviepickme-role
       Roles:
         - !Ref PipeLineRole
 
-  ######################
-  # BUILD PROJECT ROLE #
-  ######################
+  # ######################
+  # # BUILD PROJECT ROLE #
+  # ######################
 
   BuildProjectRole:
     Type: AWS::IAM::Role
@@ -255,9 +336,9 @@ Resources:
       Roles:
         - !Ref BuildProjectRole
 
-  #####################
-  # CODEBUILD PROJECT #
-  #####################
+  # #####################
+  # # CODEBUILD PROJECT #
+  # #####################
 
   # - IMDB Datasets -
   BuildProjectIMDBDatasetsHandler:
@@ -299,9 +380,9 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: imdb-datasets-handler/testsspec.yml
 
-  ################
-  # Codepipeline #
-  ################
+  # ################
+  # # Codepipeline #
+  # ################
 
   PipelineMoviePickMe:
     Type: AWS::CodePipeline::Pipeline
@@ -345,7 +426,8 @@ Resources:
               RunOrder: 1
 
         # - BUILD AND PACKAGE LAMBDAS -
-
+        - Name: Build
+          Actions:
             # IMDB Datasets
             - Name: CodeBuildIMDBDatasetsHandler
               ActionTypeId:
@@ -373,7 +455,7 @@ Resources:
                 Version: "1"
               Configuration:
                 ActionMode: CHANGE_SET_REPLACE
-                #RoleArn: !Sub "arn:aws:iam::${TargetAccount}:role/monsys-deployer-role"
+                # RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/moviepickme-deployer-role"
                 StackName: IMDBDatasetsHandler
                 ChangeSetName: !Sub "${AWS::StackName}-imdb-datasets-handler"
                 TemplatePath: IMDBDatasetsHandlerPackage::imdb-datasets-handler.yaml-processed
@@ -382,7 +464,7 @@ Resources:
                 - Name: IMDBDatasetsHandlerPackage
               OutputArtifacts:
                 - Name: IMDBDatasetsHandlerChangeSet
-              #RoleArn: !Sub "arn:aws:iam::${TargetAccount}:role/codepipeline-monsys-role"
+              # RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/codepipeline-moviepickme-role"
               RunOrder: 1
 
         # - EXECUTE CHANGE SETS  -------
@@ -397,12 +479,12 @@ Resources:
                 Version: "1"
               Configuration:
                 ActionMode: CHANGE_SET_EXECUTE
-                #RoleArn: !Sub "arn:aws:iam::${TargetAccount}:role/monsys-deployer-role"
+                # RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/moviepickme-deployer-role"
                 StackName: IMDBDatasetsHandler
                 ChangeSetName: !Sub "${AWS::StackName}-imdb-datasets-handler"
               OutputArtifacts:
                 - Name: ExecutedIMDBDatasetsHandlerChangeSet
-              #RoleArn: !Sub "arn:aws:iam::${TargetAccount}:role/codepipeline-monsys-role"
+              # RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/codepipeline-moviepickme-role"
               RunOrder: 1
 
       # - S3 Artifact Bucket -
