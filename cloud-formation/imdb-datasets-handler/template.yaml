@@ -1,7 +1,32 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: "AWS::Serverless-2016-10-31"
+Parameters:
+  ParamImdbDatasetFiles:
+    Description: List of files to delete, separated by ;
+    Type: String
+    Default: name.basics.tsv.gz
 
 Resources:
+  StorageBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+
+  StorageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StorageBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${StorageBucket}
+              - !Sub arn:aws:s3:::${StorageBucket}/*
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${AWS::AccountId}:root
+
   # Lambdas Role
   LambdasRole:
     Type: 'AWS::IAM::Role'
@@ -28,6 +53,10 @@ Resources:
         - !Ref IMDBDatasetsHandlerLayer
       Runtime: python3.7
       FunctionName: imdb-datasets-handler
+      Environment:
+        Variables:
+          STORAGE_BUCKET: !Ref StorageBucket
+          IMDB_DATASET_FILES: !Ref ParamImdbDatasetFiles
 
   IMDBDatasetsHandlerLayer:
     Type: AWS::Serverless::LayerVersion

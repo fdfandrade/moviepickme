@@ -93,6 +93,65 @@ Resources:
   # # PIPELINE ROLE #
   # #################
 
+  CFDeployerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: monsys-deployer-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+
+  CFDeployerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: monsys-deployer-policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - iam:*
+              - lambda:*
+              - apigateway:*
+              - events:*
+              - states:*
+              - logs:*            
+              - cloudformation:*
+              - s3:*
+              - sqs:*
+              - sns:*
+              - dynamodb:*
+              - ec2:*
+              - ssm:*
+              - cloudwatch:DeleteAlarms
+              - cloudwatch:DescribeAlarms
+              - cloudwatch:PutMetricData
+              - cloudwatch:PutMetricAlarm
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - kms:*
+            Resource:
+             - !Ref EncryptionCMK
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetBucketPolicy
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+             - !Join ['',['arn:aws:s3:::',!Ref ArtifactBucket, '/*']]
+             - !Join ['',['arn:aws:s3:::',!Ref ArtifactBucket]]
+      Roles:
+        - !Ref CFDeployerRole
+
   PipeLineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -352,7 +411,7 @@ Resources:
                 Version: "1"
               Configuration:
                 ActionMode: CHANGE_SET_REPLACE
-                # RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/moviepickme-deployer-role"
+                RoleArn: !GetAtt CFDeployerRole.Arn
                 StackName: IMDBDatasetsHandler
                 ChangeSetName: !Sub "${AWS::StackName}-imdb-datasets-handler"
                 TemplatePath: IMDBDatasetsHandlerPackage::imdb-datasets-handler.yaml-processed
@@ -361,7 +420,6 @@ Resources:
                 - Name: IMDBDatasetsHandlerPackage
               OutputArtifacts:
                 - Name: IMDBDatasetsHandlerChangeSet
-              # RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/codepipeline-moviepickme-role"
               RunOrder: 1
 
         # - EXECUTE CHANGE SETS  -------
@@ -376,12 +434,11 @@ Resources:
                 Version: "1"
               Configuration:
                 ActionMode: CHANGE_SET_EXECUTE
-                # RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/moviepickme-deployer-role"
+                RoleArn: !GetAtt CFDeployerRole.Arn
                 StackName: IMDBDatasetsHandler
                 ChangeSetName: !Sub "${AWS::StackName}-imdb-datasets-handler"
               OutputArtifacts:
                 - Name: ExecutedIMDBDatasetsHandlerChangeSet
-              # RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/codepipeline-moviepickme-role"
               RunOrder: 1
 
       # - S3 Artifact Bucket -

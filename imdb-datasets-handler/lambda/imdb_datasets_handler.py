@@ -21,9 +21,9 @@ class ImdbDatasetsHandler:
         self.base_url = os.getenv(
             "IMDB_DATASET_BASE_URL", "https://datasets.imdbws.com/"
         )
-        self.aws_id = os.getenv("AWS_ID")  # get this from SSM
-        self.aws_secret = os.getenv("AWS_SECRET")  # get this from SSM
-        self.s3_bucket = os.getenv("DATASETS_BUCKET")
+        # self.aws_id = os.getenv("AWS_ID")  # get this from SSM
+        # self.aws_secret = os.getenv("AWS_SECRET")  # get this from SSM
+        self.s3_bucket = os.getenv("STORAGE_BUCKET")
         self.datasets = os.getenv("IMDB_DATASET_FILES").split(
             ";"
         )  # this is ; separated list
