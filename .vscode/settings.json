@@ -1,0 +1,13 @@
+{
+    "python.testing.pytestArgs": [
+        "imdb-datasets/tests", "imdb-datasets/lambda"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.pythonPath": "C:\\Users\\fdfan\\AppData\\Local\\Programs\\Python\\Python38\\python.exe",
+    "python.formatting.provider": "black",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintUseMinimalCheckers": false
+}
