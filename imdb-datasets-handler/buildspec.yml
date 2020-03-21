@@ -8,7 +8,7 @@ phases:
     commands:
       - aws --version
       - pip install awscli --upgrade
-      - cd $CODEBUILD_SRC_DIR/
+      - cd $CODEBUILD_SRC_DIR
       - git config --global credential.*.username $TOKEN
       - git config --global core.askPass "/bin/true"
       - aws cloudformation package --template-file cloud-formation/imdb-datasets-handler/template.yaml --s3-bucket $ArtifactBucket --kms-key-id $KMSKey --output-template-file imdb-datasets-handler.yaml-processed

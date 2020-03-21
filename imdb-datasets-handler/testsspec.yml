@@ -8,6 +8,7 @@ env:
 phases:
   build:
     commands:
+      - cd $CODEBUILD_SRC_DIR
       - git config --global credential.*.username $TOKEN
       - git config --global core.askPass "/bin/true"
       - pytest imdb-datasets-handler/tests
