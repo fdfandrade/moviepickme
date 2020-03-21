@@ -264,9 +264,9 @@ Resources:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub "${AWS::StackName}-IMDBDatasetsHandlerBuild"
-      Description: Build project IMDB Datasets
+      Description: Build project IMDB Datasets Handler
       EncryptionKey: !Ref KMSKey
-      ServiceRole: !Ref BuildProjectRole
+      ServiceRole: !GetAtt BuildProjectRole.Arn
       Artifacts:
         Type: CODEPIPELINE
       Environment:
@@ -281,6 +281,23 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: imdb-datasets-handler/buildspec.yml
+
+  TestProjectIMDBDatasetsHandler:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${AWS::StackName}-IMDBDatasetsHandlerTest"
+      Description: Test project for IMDB Datasets Handler
+      EncryptionKey: !Ref KMSKey
+      ServiceRole: !GetAtt BuildProjectRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.6.5
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: imdb-datasets-handler/testsspec.yml
 
   ################
   # Codepipeline #
