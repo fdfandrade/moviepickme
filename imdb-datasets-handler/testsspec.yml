@@ -10,8 +10,6 @@ phases:
     commands:
       - pip install --upgrade pip
       - cd $CODEBUILD_SRC_DIR
-      - ls -la
-      - ls -la imdb-datasets-handler
       - git config --global credential.*.username $TOKEN
       - git config --global core.askPass "/bin/true"
       - pip install -r imdb-datasets-handler/tests/requirements.pip
