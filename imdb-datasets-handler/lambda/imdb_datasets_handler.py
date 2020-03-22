@@ -40,6 +40,7 @@ class ImdbDatasetsHandler:
         for dataset in self.datasets:
             self._download(dataset)
             self._upload(dataset)
+            self._uncompress(dataset)
 
     def _download(self, dataset):
         """ Download imdb file dataset """
@@ -107,4 +108,11 @@ class ImdbDatasetsHandler:
             Key=uncompress_filename,
         )
 
-        LOGGER.debug("Finish to unzip file")
+        LOGGER.debug("Finish to unzip file.")
+
+        s3_conn.delete_object(
+            Bucket=self.s3_bucket,
+            Key=uncompress_filename
+        )
+
+        LOGGER.debug("Uncompressed file deleted.")
