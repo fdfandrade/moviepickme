@@ -114,7 +114,7 @@ class ImdbDatasetsHandler:
 
         s3_conn.delete_object(
             Bucket=self.s3_bucket,
-            Key=uncompress_filename
+            Key=dataset
         )
 
-        LOGGER.debug("Delete uncompressed file %s", uncompress_filename)
+        LOGGER.debug("Delete uncompressed file %s", dataset)
