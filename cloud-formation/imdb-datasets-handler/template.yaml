@@ -23,14 +23,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - s3:PutObject
-              - s3:GetObject
-              - s3:ListBucketMultipartUploads
-              - s3:AbortMultipartUpload
-              - s3:PutObjectVersionAcl
-              - s3:DeleteObject
-              - s3:PutObjectAcl
-              - s3:ListMultipartUploadParts
+              - s3:*
             Resource:
               - !Sub arn:aws:s3:::${StorageBucket}
               - !Sub arn:aws:s3:::${StorageBucket}/*
@@ -56,7 +49,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ../../imdb-datasets-handler/lambda
-      MemorySize: 128
+      MemorySize: 256
       Handler: imdb_datasets.lambda_handler
       Role: !GetAtt LambdasRole.Arn
       Timeout: 300

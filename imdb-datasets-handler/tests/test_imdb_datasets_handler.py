@@ -15,6 +15,7 @@ import imdb_datasets_handler
 @pytest.fixture
 def handler():
     """ Setup the handler to be used in the tests """
+    os.environ["BASEDIR"] = "D:\\Personnal\\repos\\moviepickme-lambdas\\tmp\\"
     os.environ["IMDB_DATASET_BASE_URL"] = "https://datasets.imdbws.com/"
     os.environ["STORAGE_BUCKET"] = "mybucket"
     os.environ["IMDB_DATASET_FILES"] = "title.basics.tsv.gz"
