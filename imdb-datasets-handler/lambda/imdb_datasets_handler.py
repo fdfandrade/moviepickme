@@ -11,6 +11,8 @@ import os
 import requests
 import boto3
 
+from boto3.s3.transfer import TransferConfig
+
 LOG = logging.getLogger("ImdbDatasetsHandler")
 
 
@@ -18,6 +20,7 @@ class ImdbDatasetsHandler:
     """ Class to handle the download of the files """
 
     def __init__(self):
+        self.basedir = os.getenv("BASEDIR", "/tmp/")
         self.base_url = os.getenv(
             "IMDB_DATASET_BASE_URL", "https://datasets.imdbws.com/"
         )
@@ -35,12 +38,13 @@ class ImdbDatasetsHandler:
             self._download(dataset)
             self._upload(dataset)
 
-
     def _download(self, dataset):
         """ Download imdb file dataset """
 
         url = self.base_url + dataset
-        local_file = "/tmp/" + dataset
+        local_file = self.basedir + dataset
+
+        LOG.debug("Download file from %s to %s", url, local_file)
 
         # Use a chunk size of 50 MiB (feel free to change this)
         chunk_size = 52428800
@@ -53,11 +57,35 @@ class ImdbDatasetsHandler:
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
 
+        LOG.debug("Finish the download, total size: %s", os.path.getsize(local_file))
+
+        # Uncompress File
+        uncompress_file = open(local_file.replace(".gz", ""), "wb")
+        with gzip.open(local_file, "rb") as file:
+            bindata = file.read()
+        uncompress_file.write(bindata)
+        uncompress_file.close()
+
+        LOG.debug("Finish to unzip file, total size: %s", os.path.getsize(uncompress_file))
+
     def _upload(self, dataset):
         """ Upload the downloaded dataset file to S3 """
 
-        local_file = "/tmp/" + dataset
+        LOG.debug("Upload uncompress file to S3")
 
-        s3_conn = boto3.client("s3")
-        with gzip.open(local_file, "rb") as file:
-            s3_conn.upload_fileobj(file, self.s3_bucket, dataset)
+        config = TransferConfig(
+            multipart_threshold=1024 * 25,
+            max_concurrency=10,
+            multipart_chunksize=1024 * 25,
+            use_threads=True,
+        )
+
+        filename = dataset.replace(".gz", "")
+        file_fulpath = self.basedir + filename
+
+        LOG.debug("Upload file %s to %s", file_fulpath, (self.s3_bucket + "/" + filename))
+
+        s3_conn = boto3.resource('s3')
+        s3_conn.meta.client.upload_file(file_fulpath, self.s3_bucket, filename,
+                           ExtraArgs={'ACL': 'public-read', 'ContentType': 'text/pdf'},
+                           Config=config)
