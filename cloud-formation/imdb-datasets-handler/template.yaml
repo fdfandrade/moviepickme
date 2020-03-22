@@ -56,7 +56,7 @@ Resources:
       Environment:
         Variables:
           STORAGE_BUCKET: !Ref StorageBucket
-          IMDB_DATASET_FILES: !Ref ParamImdbDatasetFiles
+          IMDB_DATASET_FILES: !Ref ImdbDatasetFiles
 
   IMDBDatasetsHandlerLayer:
     Type: AWS::Serverless::LayerVersion

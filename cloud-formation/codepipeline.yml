@@ -18,6 +18,10 @@ Parameters:
     Description: The name of the SSM GitHub OAuth token in SSM store
     Type: String
     Default: GitHubToken
+  ParamImdbDatasetFiles:
+    Description: List of files to delete, separated by ;
+    Type: String
+    Default: name.basics.tsv.gz
 
 Resources:
   KMSKey:
@@ -416,6 +420,10 @@ Resources:
                 ChangeSetName: !Sub "${AWS::StackName}-imdb-datasets-handler"
                 TemplatePath: IMDBDatasetsHandlerPackage::imdb-datasets-handler.yaml-processed
                 Capabilities: CAPABILITY_NAMED_IAM
+                ParameterOverrides: !Sub |-
+                  { 
+                    "ImdbDatasetFiles": "${ParamImdbDatasetFiles}"
+                  }
               InputArtifacts:
                 - Name: IMDBDatasetsHandlerPackage
               OutputArtifacts:
