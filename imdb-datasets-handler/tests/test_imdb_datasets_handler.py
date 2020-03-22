@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """ Tests IMDB datasets handler module """
 import os
-import boto3
 import logging
+import boto3
 import pytest
 
 from moto import mock_s3
@@ -39,4 +39,5 @@ def test_upload_and_uncompress(handler):
     conn.create_bucket(Bucket="mybucket")
 
     handler._upload("title.basics.tsv.gz")
-    handler._uncompress("title.basics.tsv.gz")
+    handler._uncompress(conn, "title.basics.tsv.gz")
+    handler._delete_compressed_file(conn, "title.basics.tsv.gz")
