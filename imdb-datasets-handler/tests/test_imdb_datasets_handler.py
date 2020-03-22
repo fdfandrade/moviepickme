@@ -39,4 +39,5 @@ def test_upload_and_uncompress(handler):
     conn.create_bucket(Bucket="mybucket")
 
     handler._upload("title.basics.tsv.gz")
-    handler._uncompress("title.basics.tsv.gz")
+    handler._uncompress(conn, "title.basics.tsv.gz")
+    handler._delete_compressed_file(conn, "title.basics.tsv.gz")
