@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: "AWS::Serverless-2016-10-31"
 Parameters:
-  ParamImdbDatasetFiles:
+  ImdbDatasetFiles:
     Description: List of files to delete, separated by ;
     Type: String
     Default: name.basics.tsv.gz
-  ParamImdbDatasetBaseUrl:
+  ImdbDatasetBaseUrl:
     Description: Base URL for imdb dataset
     Type: String
     Default: https://datasets.imdbws.com/

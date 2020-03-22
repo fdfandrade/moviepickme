@@ -18,13 +18,10 @@ Parameters:
     Description: The name of the SSM GitHub OAuth token in SSM store
     Type: String
     Default: GitHubToken
-<<<<<<< HEAD
   ParamImdbDatasetBaseUrl:
     Description: List of files to delete, separated by ;
     Type: String
     Default: https://datasets.imdbws.com/
-=======
->>>>>>> 15f17253f2743f4dcae31f384fde8fde140725c4
   ParamImdbDatasetFiles:
     Description: List of files to delete, separated by ;
     Type: String
@@ -429,7 +426,7 @@ Resources:
                 Capabilities: CAPABILITY_NAMED_IAM
                 ParameterOverrides: !Sub |-
                   { 
-                    "ImdbDatasetBaseUrl": ${ParamImdbDatasetBaseUrl},
+                    "ImdbDatasetBaseUrl": "${ParamImdbDatasetBaseUrl}",
                     "ImdbDatasetFiles": "${ParamImdbDatasetFiles}"
                   }
               InputArtifacts:
