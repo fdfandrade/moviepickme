@@ -94,21 +94,6 @@ Resources:
               - 'lambda:ListFunctions'
               - 'lambda:AddPermission'
             Resource: "*"
-          # SSM
-          - Effect: Allow
-            Action:
-              - 'ssm:GetParameter'
-            Resource: "*"
-          # DynamoDB
-          - Effect: Allow
-            Action:
-              - dynamodb:BatchGetItem
-              - dynamodb:GetItem
-              - dynamodb:Query
-              - dynamodb:Scan
-              - dynamodb:DescribeTable
-            Resource:
-              - !ImportValue MonSysZendeskPolicyTableArn
       Roles:
         - !Ref LambdasRole
 
