@@ -40,6 +40,7 @@ class ImdbDatasetsHandler:
         """ Download imdb file dataset """
 
         url = self.base_url + dataset
+        local_file = "/tmp/" + dataset
 
         # Use a chunk size of 50 MiB (feel free to change this)
         chunk_size = 52428800
@@ -47,7 +48,7 @@ class ImdbDatasetsHandler:
         # NOTE the stream=True parameter below
         with requests.get(url, stream=True) as request:
             request.raise_for_status()
-            with open(dataset, "wb") as file:
+            with open(local_file, "wb") as file:
                 for chunk in request.iter_content(chunk_size=chunk_size):
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
@@ -55,6 +56,8 @@ class ImdbDatasetsHandler:
     def _upload(self, dataset):
         """ Upload the downloaded dataset file to S3 """
 
+        local_file = "/tmp/" + dataset
+
         s3_conn = boto3.client("s3")
-        with gzip.open(dataset, "rb") as file:
+        with gzip.open(local_file, "rb") as file:
             s3_conn.upload_fileobj(file, self.s3_bucket, dataset)

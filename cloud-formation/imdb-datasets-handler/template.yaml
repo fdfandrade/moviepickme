@@ -23,7 +23,11 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - s3:*
+              - s3:PutObject
+              - s3:PutEncryptionConfiguration
+              - s3:ListBucketMultipartUploads
+              - s3:AbortMultipartUpload
+              - s3:ListMultipartUploadParts
             Resource:
               - !Sub arn:aws:s3:::${StorageBucket}
               - !Sub arn:aws:s3:::${StorageBucket}/*
