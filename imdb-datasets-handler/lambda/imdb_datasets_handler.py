@@ -102,6 +102,8 @@ class ImdbDatasetsHandler:
         ].read()
 
         LOGGER.debug("Downloaded file from S3 size: %s", len(compressed_file))
+
+        LOGGER.debug("Uncompress file %s to %s", dataset, uncompress_filename)
         s3_conn.upload_fileobj(
             Fileobj=gzip.GzipFile(None, "rb", fileobj=BytesIO()),
             Bucket=self.s3_bucket,
@@ -115,4 +117,4 @@ class ImdbDatasetsHandler:
             Key=uncompress_filename
         )
 
-        LOGGER.debug("Uncompressed file deleted.")
+        LOGGER.debug("Delete uncompressed file %s", uncompress_filename)

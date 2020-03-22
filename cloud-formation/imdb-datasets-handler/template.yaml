@@ -49,7 +49,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ../../imdb-datasets-handler/lambda
-      MemorySize: 256
+      MemorySize: 512
       Handler: imdb_datasets.lambda_handler
       Role: !GetAtt LambdasRole.Arn
       Timeout: 300
