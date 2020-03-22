@@ -66,7 +66,9 @@ class ImdbDatasetsHandler:
         uncompress_file.write(bindata)
         uncompress_file.close()
 
-        LOG.debug("Finish to unzip file, total size: %s", os.path.getsize(uncompress_file))
+        LOG.debug(
+            "Finish to unzip file, total size: %s", os.path.getsize(uncompress_file)
+        )
 
     def _upload(self, dataset):
         """ Upload the downloaded dataset file to S3 """
@@ -83,9 +85,15 @@ class ImdbDatasetsHandler:
         filename = dataset.replace(".gz", "")
         file_fulpath = self.basedir + filename
 
-        LOG.debug("Upload file %s to %s", file_fulpath, (self.s3_bucket + "/" + filename))
+        LOG.debug(
+            "Upload file %s to %s", file_fulpath, (self.s3_bucket + "/" + filename)
+        )
 
-        s3_conn = boto3.resource('s3')
-        s3_conn.meta.client.upload_file(file_fulpath, self.s3_bucket, filename,
-                           ExtraArgs={'ACL': 'public-read', 'ContentType': 'text/pdf'},
-                           Config=config)
+        s3_conn = boto3.resource("s3")
+        s3_conn.meta.client.upload_file(
+            file_fulpath,
+            self.s3_bucket,
+            filename,
+            ExtraArgs={"ACL": "public-read", "ContentType": "text/tsv"},
+            Config=config
+        )
