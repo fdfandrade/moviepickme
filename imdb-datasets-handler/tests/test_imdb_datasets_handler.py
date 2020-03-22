@@ -16,9 +16,7 @@ import imdb_datasets_handler
 def handler():
     """ Setup the handler to be used in the tests """
     os.environ["IMDB_DATASET_BASE_URL"] = "https://datasets.imdbws.com/"
-    os.environ["AWS_ID"] = "ID"
-    os.environ["AWS_SECRET"] = "SECRET"
-    os.environ["DATASETS_BUCKET"] = "mybucket"
+    os.environ["STORAGE_BUCKET"] = "mybucket"
     os.environ["IMDB_DATASET_FILES"] = "title.basics.tsv.gz"
 
     return imdb_datasets_handler.ImdbDatasetsHandler()

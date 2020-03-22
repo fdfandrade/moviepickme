@@ -5,6 +5,10 @@ Parameters:
     Description: List of files to delete, separated by ;
     Type: String
     Default: name.basics.tsv.gz
+  ParamImdbDatasetBaseUrl:
+    Description: Base URL for imdb dataset
+    Type: String
+    Default: https://datasets.imdbws.com/
 
 Resources:
   StorageBucket:
@@ -56,7 +60,8 @@ Resources:
       Environment:
         Variables:
           STORAGE_BUCKET: !Ref StorageBucket
-          IMDB_DATASET_FILES: !Ref ParamImdbDatasetFiles
+          IMDB_DATASET_FILES: !Ref ImdbDatasetFiles
+          IMDB_DATASET_BASE_URL: !Ref ImdbDatasetBaseUrl
 
   IMDBDatasetsHandlerLayer:
     Type: AWS::Serverless::LayerVersion

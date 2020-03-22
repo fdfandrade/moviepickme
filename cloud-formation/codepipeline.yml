@@ -18,6 +18,14 @@ Parameters:
     Description: The name of the SSM GitHub OAuth token in SSM store
     Type: String
     Default: GitHubToken
+  ParamImdbDatasetBaseUrl:
+    Description: List of files to delete, separated by ;
+    Type: String
+    Default: https://datasets.imdbws.com/
+  ParamImdbDatasetFiles:
+    Description: List of files to delete, separated by ;
+    Type: String
+    Default: name.basics.tsv.gz
 
 Resources:
   KMSKey:
@@ -96,7 +104,7 @@ Resources:
   CFDeployerRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: monsys-deployer-role
+      RoleName: cf-deployer-role
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -111,7 +119,7 @@ Resources:
   CFDeployerPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: monsys-deployer-policy
+      PolicyName: cf-deployer-policy
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -122,7 +130,7 @@ Resources:
               - apigateway:*
               - events:*
               - states:*
-              - logs:*            
+              - logs:*
               - cloudformation:*
               - s3:*
               - sqs:*
@@ -139,7 +147,7 @@ Resources:
             Action:
               - kms:*
             Resource:
-             - !Ref EncryptionCMK
+             - !GetAtt KMSKey.Arn
           - Effect: Allow
             Action:
               - s3:PutObject
@@ -416,6 +424,11 @@ Resources:
                 ChangeSetName: !Sub "${AWS::StackName}-imdb-datasets-handler"
                 TemplatePath: IMDBDatasetsHandlerPackage::imdb-datasets-handler.yaml-processed
                 Capabilities: CAPABILITY_NAMED_IAM
+                ParameterOverrides: !Sub |-
+                  { 
+                    "ImdbDatasetBaseUrl": ${ParamImdbDatasetBaseUrl},
+                    "ImdbDatasetFiles": "${ParamImdbDatasetFiles}"
+                  }
               InputArtifacts:
                 - Name: IMDBDatasetsHandlerPackage
               OutputArtifacts:
