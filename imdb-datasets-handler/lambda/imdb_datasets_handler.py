@@ -60,14 +60,15 @@ class ImdbDatasetsHandler:
         LOG.debug("Finish the download, total size: %s", os.path.getsize(local_file))
 
         # Uncompress File
-        uncompress_file = open(local_file.replace(".gz", ""), "wb")
+        uncompress_filename = local_file.replace(".gz", "")
+        uncompress_file = open(uncompress_filename, "wb")
         with gzip.open(local_file, "rb") as file:
             bindata = file.read()
         uncompress_file.write(bindata)
         uncompress_file.close()
 
         LOG.debug(
-            "Finish to unzip file, total size: %s", os.path.getsize(uncompress_file)
+            "Finish to unzip file, total size: %s", os.path.getsize(uncompress_filename)
         )
 
     def _upload(self, dataset):
