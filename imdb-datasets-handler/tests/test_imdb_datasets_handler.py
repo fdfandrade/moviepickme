@@ -3,11 +3,14 @@
 """ Tests IMDB datasets handler module """
 import os
 import boto3
+import logging
 import pytest
 
 from moto import mock_s3
 
 import imdb_datasets_handler
+
+boto3.set_stream_logger("", logging.CRITICAL)
 
 # pylint: disable=redefined-outer-name
 # pylint: disable=W0212
@@ -29,10 +32,11 @@ def test_download(handler):
 
 
 @mock_s3
-def test_upload(handler):
+def test_upload_and_uncompress(handler):
     """ Test the upload file to S3 bucket """
 
     conn = boto3.client("s3", "eu-east-1")
     conn.create_bucket(Bucket="mybucket")
 
     handler._upload("title.basics.tsv.gz")
+    handler._uncompress("title.basics.tsv.gz")

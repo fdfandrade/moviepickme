@@ -8,12 +8,15 @@ Handles imdb datasets download
 import logging
 import gzip
 import os
+from io import BytesIO
+
 import requests
 import boto3
 
 from boto3.s3.transfer import TransferConfig
 
-LOG = logging.getLogger("ImdbDatasetsHandler")
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.DEBUG)
 
 
 class ImdbDatasetsHandler:
@@ -44,7 +47,7 @@ class ImdbDatasetsHandler:
         url = self.base_url + dataset
         local_file = self.basedir + dataset
 
-        LOG.debug("Download file from %s to %s", url, local_file)
+        LOGGER.debug("Download file from %s to %s", url, local_file)
 
         # Use a chunk size of 50 MiB (feel free to change this)
         chunk_size = 52428800
@@ -57,24 +60,12 @@ class ImdbDatasetsHandler:
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
 
-        LOG.debug("Finish the download, total size: %s", os.path.getsize(local_file))
-
-        # Uncompress File
-        uncompress_filename = local_file.replace(".gz", "")
-        uncompress_file = open(uncompress_filename, "wb")
-        with gzip.open(local_file, "rb") as file:
-            bindata = file.read()
-        uncompress_file.write(bindata)
-        uncompress_file.close()
-
-        LOG.debug(
-            "Finish to unzip file, total size: %s", os.path.getsize(uncompress_filename)
-        )
+        LOGGER.debug("Finish the download, total size: %s", os.path.getsize(local_file))
 
     def _upload(self, dataset):
         """ Upload the downloaded dataset file to S3 """
 
-        LOG.debug("Upload uncompress file to S3")
+        LOGGER.debug("Upload uncompress file to S3")
 
         config = TransferConfig(
             multipart_threshold=1024 * 25,
@@ -83,10 +74,10 @@ class ImdbDatasetsHandler:
             use_threads=True,
         )
 
-        filename = dataset.replace(".gz", "")
+        filename = dataset
         file_fulpath = self.basedir + filename
 
-        LOG.debug(
+        LOGGER.debug(
             "Upload file %s to %s", file_fulpath, (self.s3_bucket + "/" + filename)
         )
 
@@ -96,5 +87,24 @@ class ImdbDatasetsHandler:
             self.s3_bucket,
             filename,
             ExtraArgs={"ACL": "public-read", "ContentType": "text/tsv"},
-            Config=config
+            Config=config,
         )
+
+    def _uncompress(self, dataset):
+        """ Uncompress file in S3 bucket """
+
+        uncompress_filename = dataset.replace(".gz", "")
+
+        s3_conn = boto3.client("s3")
+        compressed_file = s3_conn.get_object(Bucket=self.s3_bucket, Key=dataset)[
+            "Body"
+        ].read()
+
+        LOGGER.debug("Downloaded file from S3 size: %s", len(compressed_file))
+        s3_conn.upload_fileobj(
+            Fileobj=gzip.GzipFile(None, "rb", fileobj=BytesIO()),
+            Bucket=self.s3_bucket,
+            Key=uncompress_filename,
+        )
+
+        LOGGER.debug("Finish to unzip file")
