@@ -1,0 +1,20 @@
+---
+version: 0.2
+env:
+  parameter-store:
+    TOKEN: GitHubToken
+phases:
+  build:
+    commands:
+      - aws --version
+      - pip install awscli --upgrade
+      - cd $CODEBUILD_SRC_DIR/
+      - git config --global credential.*.username $TOKEN
+      - git config --global core.askPass "/bin/true"
+      - aws cloudformation package --template-file cloud-formation/imdb-datasets-state-machine/template.yml --s3-bucket $ArtifactBucket --kms-key-id $KMSKey --output-template-file imdb-datasets-state-machine.yaml-processed
+  post_build:
+    commands:
+      - echo "build completed on `date`"
+artifacts:
+  files:
+    - imdb-datasets-state-machine.yaml-processed

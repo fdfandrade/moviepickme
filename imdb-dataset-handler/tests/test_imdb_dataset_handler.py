@@ -8,7 +8,7 @@ import pytest
 
 from moto import mock_s3
 
-import imdb_datasets_handler
+import imdb_dataset_handler
 
 boto3.set_stream_logger("", logging.CRITICAL)
 
@@ -23,7 +23,7 @@ def handler():
     os.environ["STORAGE_BUCKET"] = "mybucket"
     os.environ["IMDB_DATASET_FILES"] = "title.basics.tsv.gz"
 
-    return imdb_datasets_handler.ImdbDatasetsHandler()
+    return imdb_dataset_handler.ImdbDatasetsHandler()
 
 
 def test_download(handler):

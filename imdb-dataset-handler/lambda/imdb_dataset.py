@@ -4,7 +4,7 @@ Contains the lambda handler
 """
 import time
 
-import imdb_datasets_handler
+import imdb_dataset_handler
 
 # pylint: disable=W0613
 def lambda_handler(event, context):
@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     handler = imdb_datasets_handler.ImdbDatasetsHandler()
 
     start = time.time()
-    handler.process()
+    handler.handle()
     end = time.time()
 
     return {

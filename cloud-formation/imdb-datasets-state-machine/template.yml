@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IMDB Datasets State Machine
+
+Resources:
+  IMDbDatasetsStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: IMDb-Datasets-StateMachine
+      RoleArn: !GetAtt IamRoleStateMachineExecution.Arn
+      DefinitionString:
+        Fn::Sub:
+        - |-
+          {
+            "StartAt": "ProcessTitlesDataset",
+            "States": {
+              "ProcessTitlesDataset": {
+                "Type": "Task",
+                "Resource": "${DummyLambda}",
+                "Comment": "Process the basics file titles",
+                "Next": "ProcessRatingsDataset",
+                "Parameters": {
+                  "dataset": "$.dataset"
+                }
+              },
+              "ProcessRatingsDataset": {
+                "Type": "Task",
+                "Resource": "${DummyLambda}",
+                "End": true
+                "Parameters": {
+                  "event_id": "$.event_id",
+                  "status": "Responding",
+                  "status_reason": "$.status_reason"
+                }
+              }
+            }
+          }
+        - DummyLambda: !GetAtt DummyFunction.Arn
+       #- StatusLambda: !ImportValue StatusLambdaArn
+       #  ProcessorLambda: !ImportValue ProcessorLambdaArn
+       #  SLAIntegrationLambda: !ImportValue SLAIntegrationLambdaArn
+       #  SuppressPolicyLambda: !ImportValue SuppressPolicyLambdaArn
+       #  EvaluatePolicyLambda: !ImportValue EvaluatePolicyLambdaArn
+       #  CreateElasticIncidentLambda: !ImportValue CreateElasticIncidentLambdaArn
+       #  OngoingOperationLambda: !ImportValue OngoingOperationLambdaArn
+       #  ZendeskIntegrationLambda: !ImportValue ZendeskIntegrationLambdaArn
+  
+  #This can be deleted when finished. It's to allow the Steps to call
+  # a "Hello World" type function while the Lambdas are being developed
+  DummyFunction:
+   Type: AWS::Lambda::Function
+   Properties:
+     Code:
+       ZipFile: |-
+           def handler(event, context):
+               print("hello world")
+     Handler: index.handler
+     Role: !GetAtt LambdasRole.Arn
+     Runtime: python3.7
+   
+  # Dummy Lambdas Role - To delete
+  LambdasRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+  
+  IamRoleStateMachineExecution:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: !Sub 'states.${AWS::Region}.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: StepFunctionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource:
+                  - !GetAtt DummyFunction.Arn
+                  #- !ImportValue ProcessorLambdaArn
+
+Outputs:
+  IMDbDatasetsStateMachineArn:
+    Description: Arn of Alerting Response Step Function
+    Value: !Ref IMDbDatasetsStateMachine
+    Export:
+      Name: IMDbDatasetsStateMachine

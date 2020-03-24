@@ -11,11 +11,11 @@ phases:
       - cd $CODEBUILD_SRC_DIR
       - git config --global credential.*.username $TOKEN
       - git config --global core.askPass "/bin/true"
-      - pip install -r imdb-datasets-handler/layer/requirements.pip -t imdb-datasets-handler/layer/python
-      - aws cloudformation package --template-file cloud-formation/imdb-datasets-handler/template.yaml --s3-bucket $ArtifactBucket --kms-key-id $KMSKey --output-template-file imdb-datasets-handler.yaml-processed
+      - pip install -r imdb-dataset-handler/layer/requirements.pip -t imdb-dataset-handler/layer/python
+      - aws cloudformation package --template-file cloud-formation/imdb-dataset-handler/template.yaml --s3-bucket $ArtifactBucket --kms-key-id $KMSKey --output-template-file imdb-dataset-handler.yaml-processed
   post_build:
     commands:
       - echo "Build completed on `date`"
 artifacts:
   files:
-    - imdb-datasets-handler.yaml-processed
+    - imdb-dataset-handler.yaml-processed

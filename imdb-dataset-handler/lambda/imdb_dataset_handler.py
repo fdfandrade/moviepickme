@@ -15,11 +15,11 @@ import boto3
 
 from boto3.s3.transfer import TransferConfig
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 
-class ImdbDatasetsHandler:
+class ImdbDatasetHandler:
     """ Class to handle the download of the files """
 
     def __init__(self):
@@ -34,11 +34,15 @@ class ImdbDatasetsHandler:
             ";"
         )  # this is ; separated list
 
-    def process(self):
+    def handle(self):
         """ Process all datasets """
         s3_conn = boto3.client("s3")
 
+        LOGGER.debug("Datasets to process '%s'", self.datasets)
+
         for dataset in self.datasets:
+            LOGGER.debug("Processing '%s'", dataset)
+
             self._download(dataset)
             self._upload(dataset)
             self._uncompress(s3_conn, dataset)
@@ -50,7 +54,7 @@ class ImdbDatasetsHandler:
         url = self.base_url + dataset
         local_file = self.basedir + dataset
 
-        LOGGER.debug("Download file from %s to %s", url, local_file)
+        LOGGER.debug("Download file from '%s' to '%s'", url, local_file)
 
         # Use a chunk size of 50 MiB (feel free to change this)
         chunk_size = 52428800
@@ -81,7 +85,9 @@ class ImdbDatasetsHandler:
         file_fulpath = self.basedir + filename
 
         LOGGER.debug(
-            "Upload file %s to %s", file_fulpath, (self.s3_bucket + "/" + filename)
+            "Uploaded file '%s' to '%s'",
+            file_fulpath,
+            (self.s3_bucket + "/" + filename),
         )
 
         s3_conn = boto3.resource("s3")
@@ -98,28 +104,29 @@ class ImdbDatasetsHandler:
         uncompress_filename = dataset.replace(".gz", "")
         compressed_file = self._get_compressed_file(s3_client, dataset)
 
-        LOGGER.debug("Uncompress file %s to %s", dataset, uncompress_filename)
+        LOGGER.debug("Uncompress file '%s' to '%s'", dataset, uncompress_filename)
         s3_client.upload_fileobj(
             Fileobj=gzip.GzipFile(None, "rb", fileobj=BytesIO(compressed_file)),
             Bucket=self.s3_bucket,
             Key=uncompress_filename,
         )
 
-        LOGGER.debug("Finish to unzip file.")
+        LOGGER.debug("Finish to unzip file '%s'", uncompress_filename)
 
     def _get_compressed_file(self, client, dataset):
         compressed_file = client.get_object(Bucket=self.s3_bucket, Key=dataset)[
             "Body"
         ].read()
 
-        LOGGER.debug("Downloaded file from S3 size: %s", len(compressed_file))
+        LOGGER.debug(
+            "Downloaded file '%s' from S3 with total size '%s'",
+            dataset,
+            len(compressed_file),
+        )
 
         return compressed_file
 
     def _delete_compressed_file(self, client, dataset):
-        client.delete_object(
-            Bucket=self.s3_bucket,
-            Key=dataset
-        )
+        client.delete_object(Bucket=self.s3_bucket, Key=dataset)
 
-        LOGGER.debug("Delete uncompressed file %s", dataset)
+        LOGGER.debug("Delete uncompressed file '%s'", dataset)

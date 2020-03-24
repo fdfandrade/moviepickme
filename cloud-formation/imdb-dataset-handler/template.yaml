@@ -8,7 +8,7 @@ Parameters:
   ImdbDatasetBaseUrl:
     Description: Base URL for imdb dataset
     Type: String
-    Default: https://datasets.imdbws.com/
+    Default: https://dataset.imdbws.com/
 
 Resources:
   StorageBucket:
@@ -45,37 +45,37 @@ Resources:
             Action:
               - 'sts:AssumeRole'
 
-  IMDBDatasetsHandlerLambda:
+  IMDBDatasetHandlerLambda:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../../imdb-datasets-handler/lambda
-      MemorySize: 512
-      Handler: imdb_datasets.lambda_handler
+      CodeUri: ../../imdb-dataset-handler/lambda
+      MemorySize: 768
+      Handler: imdb_dataset.lambda_handler
       Role: !GetAtt LambdasRole.Arn
       Timeout: 300
       Layers:
-        - !Ref IMDBDatasetsHandlerLayer
+        - !Ref IMDBDatasetHandlerLayer
       Runtime: python3.7
-      FunctionName: imdb-datasets-handler
+      FunctionName: imdb-dataset-handler
       Environment:
         Variables:
           STORAGE_BUCKET: !Ref StorageBucket
           IMDB_DATASET_FILES: !Ref ImdbDatasetFiles
           IMDB_DATASET_BASE_URL: !Ref ImdbDatasetBaseUrl
 
-  IMDBDatasetsHandlerLayer:
+  IMDBDatasetHandlerLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
       CompatibleRuntimes:
         - python3.7
-      ContentUri: ../../imdb-datasets-handler/layer
-      Description: "IMDB Datasets layer"
-      LayerName: imdb-datasets-handler-layer
+      ContentUri: ../../imdb-dataset-handler/layer
+      Description: "IMDB Dataset layer"
+      LayerName: imdb-dataset-handler-layer
 
   AssumeRolePolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: imdb-datasets-handler-policy
+      PolicyName: imdb-dataset-handler-policy
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -86,7 +86,7 @@ Resources:
               - 'logs:CreateLogGroup'
               - 'logs:PutLogEvents'
             Resource: 
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${IMDBDatasetsHandlerLambda}:*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${IMDBDatasetHandlerLambda}:*"
           # Lambdas-related access
           - Effect: Allow
             Action:
@@ -98,8 +98,8 @@ Resources:
         - !Ref LambdasRole
 
 Outputs:
-  IMDBDatasetsHandlerLambdaName:
+  IMDBDatasetHandlerLambdaName:
     Description: Watcher Event Evaluate Policies Lambda Name
-    Value: !GetAtt IMDBDatasetsHandlerLambda.Arn
+    Value: !GetAtt IMDBDatasetHandlerLambda.Arn
     Export:
-      Name: IMDBDatasetsHandlerLambdaName
+      Name: IMDBDatasetHandlerLambdaName
