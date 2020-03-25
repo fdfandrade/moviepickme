@@ -1,0 +1,19 @@
+---
+version: 0.2
+env:
+  variables:
+    PYTHONPATH: "imdb-dataset-handler/lambda:imdb-dataset-handler/layer/python"
+  parameter-store:
+    TOKEN: GitHubToken
+phases:
+  build:
+    commands:
+      - pip install --upgrade pip
+      - cd $CODEBUILD_SRC_DIR
+      - git config --global credential.*.username $TOKEN
+      - git config --global core.askPass "/bin/true"
+      - pip install -r imdb-dataset-handler/tests/requirements.pip
+      - pytest imdb-dataset-handler/tests
+  post_build:
+    commands:
+      - echo "Tests completed on `date`"

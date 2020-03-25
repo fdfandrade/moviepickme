@@ -8,7 +8,6 @@ Handles imdb datasets download
 import logging
 import gzip
 import time
-import json
 import os
 from io import BytesIO
 
@@ -19,6 +18,8 @@ from boto3.s3.transfer import TransferConfig
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
+
+IMDB_DATASET_STATE_MACHINE = os.getenv("IMDB_DATASET_STATE_MACHINE")
 
 class ImdbDatasetHandler:
     """ Class to handle the download of the files """
@@ -43,15 +44,13 @@ class ImdbDatasetHandler:
         LOGGER.debug("Datasets to process '%s'", self.datasets)
 
         for dataset in self.datasets:
-            LOGGER.info("Start processing '%s'", dataset)
+            LOGGER.debug("Processing '%s'", dataset)
 
             self._download(dataset)
             self._upload(dataset)
             self._uncompress(dataset)
             self._delete_compressed_file(dataset)
             self._start_workflow(dataset)
-
-            LOGGER.info("End processing '%s'", dataset)
 
     def _download(self, dataset):
         """ Download imdb file dataset """
@@ -95,8 +94,7 @@ class ImdbDatasetHandler:
             (self.s3_bucket + "/" + filename),
         )
 
-        s3_conn = boto3.resource("s3")
-        s3_conn.meta.client.upload_file(
+        self.s3_client.meta.client.upload_file(
             file_fulpath,
             self.s3_bucket,
             filename,
@@ -107,7 +105,7 @@ class ImdbDatasetHandler:
     def _uncompress(self, dataset):
         """ Uncompress file in S3 bucket """
         uncompress_filename = dataset.replace(".gz", "")
-        compressed_file = self._get_compressed_file(dataset)
+        compressed_file = self._get_compressed_file(self.s3_client, dataset)
 
         LOGGER.debug("Uncompress file '%s' to '%s'", dataset, uncompress_filename)
         self.s3_client.upload_fileobj(
@@ -137,29 +135,22 @@ class ImdbDatasetHandler:
         LOGGER.debug("Delete uncompressed file '%s'", dataset)
 
     def _start_workflow(self, dataset):
-        self._call_state_machine(dataset.replace(".gz", ""))
+        self.call_state_machine(dataset.replace(".gz", ""))
 
-    def _call_state_machine(self, filename):
+    def call_state_machine(self, filename):
         """ Calls the State Machine """
-
-        state_machine_arn = os.getenv("IMDB_DATASET_STATE_MACHINE")
 
         try:
             response = self.sf_client.start_execution(
-                stateMachineArn=state_machine_arn,
+                stateMachineArn=IMDB_DATASET_STATE_MACHINE,
                 name=self._get_execution_name(filename),
-                input=self._get_state_machine_input(filename)
+                input={"dataset": filename}
             )
         except:
             LOGGER.exception("Error executing state machine for dataset: '%s'", filename)
             raise
         else:
-            LOGGER.info("State machine executed. Response: %s", response)
+            log.info("State machine executed. Response: %s", response)
 
-    @staticmethod
-    def _get_execution_name(filename):
+    def _get_execution_name(self, filename):
         return filename + "_" + str(time.time())
-
-    @staticmethod
-    def _get_state_machine_input(filename):
-        return json.dumps({"dataset": filename})
