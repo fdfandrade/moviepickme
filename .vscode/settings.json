@@ -1,6 +1,7 @@
 {
     "python.testing.pytestArgs": [
-        "imdb-dataset-handler/tests", "imdb-dataset-handler/lambda"
+        "imdb-dataset-handler/tests",
+        "imdb-dataset-processor/tests"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,

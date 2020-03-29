@@ -76,7 +76,7 @@ def test_handle(handler):
 def test_start_workflow(handler):
     """ Test the start of the workflow """
     response = handler.sf_client.create_state_machine(
-        name="Alerting-Response-StateMachine",
+        name="StateMachine",
         definition=fixtures.state_machine(),
         roleArn=_get_default_role(),
     )

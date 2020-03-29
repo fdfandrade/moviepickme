@@ -2,7 +2,7 @@
 version: 0.2
 env:
   variables:
-    PYTHONPATH: "imdb-dataset-handler/lambda:imdb-dataset-handler/layer/python"
+    PYTHONPATH: "imdb-dataset-processor-handler/lambda:imdb-dataset-processor-handler/layer/python"
   parameter-store:
     TOKEN: GitHubToken
 phases:
@@ -12,8 +12,8 @@ phases:
       - cd $CODEBUILD_SRC_DIR
       - git config --global credential.*.username $TOKEN
       - git config --global core.askPass "/bin/true"
-      - pip install -r imdb-dataset-handler/tests/requirements.pip
-      - pytest imdb-dataset-handler/tests
+      - pip install -r imdb-dataset-processor-handler/tests/requirements.pip
+      - pytest imdb-dataset-processor-handler/tests
   post_build:
     commands:
       - echo "Tests completed on `date`"

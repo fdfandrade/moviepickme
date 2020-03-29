@@ -343,6 +343,46 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: imdb-datasets-handler/testsspec.yml
+  
+  # - IMDB Dataset Processor -
+  BuildProjectIMDbDatasetProcesorHandler:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${AWS::StackName}-IMDbDatasetProcesorHandlerBuild"
+      Description: Build project IMDB Dataset Handler
+      EncryptionKey: !Ref KMSKey
+      ServiceRole: !GetAtt BuildProjectRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.6.5
+        EnvironmentVariables:
+          - Name: ArtifactBucket
+            Value: !Ref ArtifactBucket
+          - Name: KMSKey
+            Value: !Ref KMSKey
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: imdb-datasets-handler/buildspec.yml
+
+  TestProjectIMDbDatasetProcesorHandler:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${AWS::StackName}-IMDbDatasetProcesorHandlerTest"
+      Description: Test project for IMDB Dataset Handler
+      EncryptionKey: !Ref KMSKey
+      ServiceRole: !GetAtt BuildProjectRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.6.5
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: imdb-datasets-handler/testsspec.yml
 
   # ################
   # # Codepipeline #

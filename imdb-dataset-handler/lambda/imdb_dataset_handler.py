@@ -28,8 +28,6 @@ class ImdbDatasetHandler:
         self.base_url = os.getenv(
             "IMDB_DATASET_BASE_URL", "https://datasets.imdbws.com/"
         )
-        # self.aws_id = os.getenv("AWS_ID")  # get this from SSM
-        # self.aws_secret = os.getenv("AWS_SECRET")  # get this from SSM
         self.s3_bucket = os.getenv("STORAGE_BUCKET")
         self.datasets = os.getenv("IMDB_DATASET_FILES").split(
             ";"
@@ -47,8 +45,6 @@ class ImdbDatasetHandler:
 
             self._download(dataset)
             self._upload(dataset)
-            self._uncompress(dataset)
-            self._delete_compressed_file(dataset)
             self._start_workflow(dataset)
 
             LOGGER.info("End processing '%s'", dataset)
@@ -104,38 +100,6 @@ class ImdbDatasetHandler:
             Config=config,
         )
 
-    def _uncompress(self, dataset):
-        """ Uncompress file in S3 bucket """
-        uncompress_filename = dataset.replace(".gz", "")
-        compressed_file = self._get_compressed_file(dataset)
-
-        LOGGER.debug("Uncompress file '%s' to '%s'", dataset, uncompress_filename)
-        self.s3_client.upload_fileobj(
-            Fileobj=gzip.GzipFile(None, "rb", fileobj=BytesIO(compressed_file)),
-            Bucket=self.s3_bucket,
-            Key=uncompress_filename,
-        )
-
-        LOGGER.debug("Finish to unzip file '%s'", uncompress_filename)
-
-    def _get_compressed_file(self, dataset):
-        compressed_file = self.s3_client.get_object(Bucket=self.s3_bucket, Key=dataset)[
-            "Body"
-        ].read()
-
-        LOGGER.debug(
-            "Downloaded file '%s' from S3 with total size '%s'",
-            dataset,
-            len(compressed_file),
-        )
-
-        return compressed_file
-
-    def _delete_compressed_file(self, dataset):
-        self.s3_client.delete_object(Bucket=self.s3_bucket, Key=dataset)
-
-        LOGGER.debug("Delete uncompressed file '%s'", dataset)
-
     def _start_workflow(self, dataset):
         self._call_state_machine(dataset.replace(".gz", ""))
 
@@ -163,3 +127,4 @@ class ImdbDatasetHandler:
     @staticmethod
     def _get_state_machine_input(filename):
         return json.dumps({"dataset": filename})
+    

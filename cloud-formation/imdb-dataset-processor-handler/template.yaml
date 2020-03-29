@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: "AWS::Serverless-2016-10-31"
+Parameters:
+  IMDbTitleStateMachineArn:
+    Description: State Machine Arn
+    Type: String
+
+Resources:
+
+  # Lambdas Role
+  LambdasRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+
+  IMDbDatasetProcessorHandlerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../imdb-dataset-processor-handler/lambda
+      MemorySize: 768
+      Handler: imdb_dataset.lambda_handler
+      Role: !GetAtt LambdasRole.Arn
+      Timeout: 300
+      Layers:
+        - !Ref IMDbDatasetProcessorHandlerLayer
+      Runtime: python3.7
+      FunctionName: imdb-dataset-processor-handler
+      Environment:
+        Variables:
+          STORAGE_BUCKET: !ImportValue StorageDatabaseName
+          IMDB_TITLE_STATE_MACHINE: !Ref IMDbTitleStateMachineArn
+
+  IMDbDatasetProcessorHandlerLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - python3.7
+      ContentUri: ../../imdb-dataset-processor-handler/layer
+      Description: "IMDB Dataset layer"
+      LayerName: imdb-dataset-processor-handler-layer
+
+  AssumeRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: imdb-dataset-processor-handler-policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          # Log-related access
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogStream'
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${IMDbDatasetProcessorHandlerLambda}:*"
+          # Lambdas-related access
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+              - 'lambda:ListFunctions'
+              - 'lambda:AddPermission'
+            Resource: "*"
+      Roles:
+        - !Ref LambdasRole
+
+Outputs:
+  IMDbDatasetProcessorHandlerLambdaName:
+    Description: IMDb dataset processor Lambda Name
+    Value: !GetAtt IMDbDatasetProcessorHandlerLambda.Arn
+    Export:
+      Name: IMDbDatasetProcessorHandlerLambdaName

@@ -9,6 +9,10 @@ Parameters:
     Description: Base URL for imdb dataset
     Type: String
     Default: https://dataset.imdbws.com/
+  IMDbDatasetStateMachineArn:
+    Description: State Machine Arn
+    Type: String
+
 
 Resources:
   StorageBucket:
@@ -62,6 +66,8 @@ Resources:
           STORAGE_BUCKET: !Ref StorageBucket
           IMDB_DATASET_FILES: !Ref ImdbDatasetFiles
           IMDB_DATASET_BASE_URL: !Ref ImdbDatasetBaseUrl
+          IMDB_DATASET_STATE_MACHINE: !Ref IMDbDatasetStateMachineArn
+
 
   IMDBDatasetHandlerLayer:
     Type: AWS::Serverless::LayerVersion
@@ -98,8 +104,13 @@ Resources:
         - !Ref LambdasRole
 
 Outputs:
+  StorageDatabaseName:
+    Description: The S3 Bucket to storage datasets
+    Value: !GetAtt StorageBucket.Arn
+    Export:
+      Name: StorageDatabaseName
   IMDBDatasetHandlerLambdaName:
-    Description: Watcher Event Evaluate Policies Lambda Name
+    Description: IMDb Dataset handler Lambda Name
     Value: !GetAtt IMDBDatasetHandlerLambda.Arn
     Export:
       Name: IMDBDatasetHandlerLambdaName
